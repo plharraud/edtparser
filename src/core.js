@@ -121,7 +121,7 @@ const applyFilters = (data, filters) => {
 
 const dateToIcsArray = (datestring) => {
     const d = new Date(datestring)
-    return [d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours()+1, d.getMinutes()]
+    return [d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes()]
 }
 
 const middleware = async (req, res) => {
