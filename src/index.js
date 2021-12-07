@@ -6,4 +6,4 @@ const app = express()
 
 app.get('/', middleware)
 
-app.listen(8000)
+app.listen(process.env.PORT)
