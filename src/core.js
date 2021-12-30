@@ -1,6 +1,6 @@
 const { cache } = require('./cache')
 const ical = require('node-ical')
-const ics = require('ics')
+const icsBuilder = require('ics')
 
 const adeUrl = (ecole, resources) => {
   return `${process.env.ADE_BASE_URL}${ecole}?resources=${resources}`
@@ -159,11 +159,20 @@ const parseEvents = async (req, res, next) => {
   next()
 }
 
+const parseCourses = (req, res, next) => {
+  const courses = req.events.map(e => e.course).filter((v, i, s) => s.indexOf(v) === i)
+  req.courses = courses
+  next()
+}
+
 const json = (req, res) => {
   res.append('Access-Control-Allow-Origin', 'http://localhost:3000')
   res.json({
     length: req.events.length,
-    data: req.events
+    data: {
+      events: req.events,
+      courses: req.courses
+    }
   })
 }
 
@@ -171,7 +180,7 @@ const debug = (req, res) => {
   res.json(req.debug)
 }
 
-const sendics = (req, res) => {
+const ics = (req, res) => {
   const formatted_events = req.events.map(evt => {
     return {
       title: evt.summary,
@@ -182,7 +191,7 @@ const sendics = (req, res) => {
       method: 'REQUEST'
     }
   })
-  const { error, value } = ics.createEvents(formatted_events)
+  const { error, value } = icsBuilder.createEvents(formatted_events)
   if (error) console.log(error)
 
   res.append('content-type', 'text/calendar')
@@ -192,7 +201,8 @@ const sendics = (req, res) => {
 
 module.exports = {
   parseEvents,
-  sendics,
+  parseCourses,
+  ics,
   debug,
   json
 }

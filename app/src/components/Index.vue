@@ -1,17 +1,31 @@
 <template>
   <div class="row">
-    <div class="col s6">
-      <div
-        v-for="course in courses"
-        :key="course"
-        class="card"
-      >
-        <p>{{ course }}</p>
-        <input type="checkbox">
+    <div class="col s12 l6">
+      <div class="row">
+        <div class="col s12">
+          <table>
+            <tbody>
+              <tr
+                v-for="course in courses"
+                :key="course"
+              >
+                <td>{{ course }}</td>
+                <td class="right-align">
+                  <div class="switch">
+                    <label>
+                      <input type="checkbox">
+                      <span class="lever" />
+                    </label>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-    <div class="col s6">
-      <div class="row">
+    <div class="col s12 l6">
+      <div class="row center-align">
         <div class="col s1" />
         <div class="col s2">
           lundi
@@ -69,9 +83,8 @@ export default {
   mounted () {
     axios.get('http://localhost:8080/json' + window.location.search)
       .then(res => {
-        this.events = res.data.data.sort((a, b) => { return new Date(a.start) - new Date(b.start) })
+        this.events = res.data.data.events.sort((a, b) => { return new Date(a.start) - new Date(b.start) })
         this.courses = this.events.map(e => e.course?.name).filter((element, index, array) => array.indexOf(element) === index)
-        console.log(this.courses)
       })
   },
   methods: {
