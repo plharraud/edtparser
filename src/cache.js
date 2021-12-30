@@ -1,9 +1,9 @@
-const nodeCache = require('node-cache');
+const nodeCache = require('node-cache')
 
 const cache = new nodeCache({
-    stdTTL: process.env.CACHE_TTL_MINUTES * 60
-});
+  stdTTL: process.env.CACHE_TTL_MINUTES * 60
+})
 
 module.exports = {
-    cache
+  cache
 }

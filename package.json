@@ -1,19 +1,41 @@
 {
-  "name": "edt",
+  "name": "ade-parser",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.js",
+  "private": true,
   "scripts": {
     "start": "node .",
-    "dev": "nodemon ."
+    "build": "vite build --emptyOutDir",
+    "dev": "concurrently \"pnpm:watch-*\"",
+    "watch-node": "nodemon .",
+    "watch-vue": "vite",
+    "lint": "pnpm run lint-node && pnpm run lint-vue",
+    "lint-node": "pnpx eslint --fix src/",
+    "lint-vue": "pnpx eslint --fix --ext js,vue app/"
   },
-  "author": "",
+  "author": "pl",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.24.0",
+    "concurrently": "^6.4.0",
+    "dayjs": "^1.10.7",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "ics": "^2.35.0",
+    "materialize-css": "^1.0.0-rc.2",
     "node-cache": "^5.1.2",
-    "node-ical": "^0.14.1"
+    "node-ical": "^0.14.1",
+    "vue": "^3.2.23"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^1.10.2",
+    "eslint": "^8.2.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.2.0",
+    "eslint-plugin-vue": "^8.2.0",
+    "vite": "^2.7.0"
   }
 }
