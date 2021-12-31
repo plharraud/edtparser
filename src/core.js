@@ -64,9 +64,15 @@ const parseCourseId = (courseId) => {
 const parseResources = (resourceQuery) => {
   if (!resourceQuery) return []
   resourceQuery = Array.isArray(resourceQuery) ? resourceQuery : [resourceQuery]
-  const regex = /(?<ecole>\D+)(?<ids>\d.+)/g
+  const regex = /(?<ecole>\D+)(?<ids>[\d,]+)/g
   const resources = resourceQuery.map(r => [...r.matchAll(regex)][0]?.groups)
-    .map(r => { r.ids = r.ids.split(','); return r })
+    .map(r => {
+      if (!r?.ids || !r?.ecole) {
+        return null
+      }
+      r.ids = r.ids.split(','); return r
+    })
+    .filter(r => r !== null)
   return resources
 }
 
@@ -125,6 +131,9 @@ const parseEvents = async (req, res, next) => {
   const resources = parseResources(req.query.resource)
   let edt = {}
   for (const resource of Object.values(resources)) {
+    if (!resource?.ids || !resource?.ecole) {
+      continue
+    }
     for (const id of resource.ids) {
       const data = await fetchEventsCached(resource.ecole, id)
       edt = Object.assign(edt, data)
@@ -160,19 +169,39 @@ const parseEvents = async (req, res, next) => {
 }
 
 const parseCourses = (req, res, next) => {
-  const courses = req.events.map(e => e.course).filter((v, i, s) => s.indexOf(v) === i)
+  const courses = []
+  req.events.forEach((v, i, s) => {
+    if (!v.course?.name) {
+      return
+    }
+    if (courses.some(c => c.name === v.course.name)) {
+      const i = courses.findIndex(c => c.name === v.course.name)
+      if (groupToInt(courses[i].maxgroup) < groupToInt(v.course.group)) {
+        courses[i].maxgroup = v.course.group
+      }
+    } else {
+      courses.push({
+        name: v.course.name,
+        maxgroup: v.course.group
+      })
+    }
+  })
   req.courses = courses
   next()
+}
+
+const groupToInt = (group) => {
+  return parseInt(group.substring(1), 10)
 }
 
 const json = (req, res) => {
   res.append('Access-Control-Allow-Origin', 'http://localhost:3000')
   res.json({
-    length: req.events.length,
     data: {
-      events: req.events,
-      courses: req.courses
-    }
+      courses: req.courses,
+      events: req.events
+    },
+    length: req.events.length
   })
 }
 
