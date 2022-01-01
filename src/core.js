@@ -136,7 +136,7 @@ const parseEvents = async (req, res, next) => {
     }
     for (const id of resource.ids) {
       const data = await fetchEventsCached(resource.ecole, id)
-      edt = Object.assign(edt, data)
+      edt = Object.assign(edt, data.map(e => Object.assign(e, { origin: `${resource.ecole}${resource.ids}` })))
     }
   }
 
@@ -150,7 +150,9 @@ const parseEvents = async (req, res, next) => {
         location: event.location,
         start: event.start,
         end: event.end,
-        course: event.course
+        course: event.course,
+        origin: event.origin,
+        id: event.uid
       }
     })
 

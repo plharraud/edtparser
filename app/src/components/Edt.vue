@@ -8,13 +8,12 @@
               <div class="input-field col s8">
                   <div class="input-field">
                     <i class="material-icons prefix">insert_link</i>
-                    <input name="url" type="text">
+                    <input name="url" type="text" placeholder="https://edt.grenoble-inp.fr/directCal/2021-2022/etudiant/phelma?resources=9671,9796">
                   </div>
               </div>
               <div class="input-field col s4">
-                <button class="btn waves-effect waves-light" type="submit">
-                  <i class="material-icons left">add</i>
-                  Ajouter
+                <button class="btn" type="submit">
+                  <i class="material-icons">add</i>
                 </button>
               </div>
             </form>
@@ -24,7 +23,7 @@
       <div class="row">
         <div class="col s12">
           <ul>
-            <li v-for="r in resources" :key="r">{{r}}</li>
+            <li v-for="r in resources" :key="r">{{r}} <a href="" @click="resources.splice(resources.indexOf(r), 1)">supprimer</a></li>
           </ul>
         </div>
       </div>
@@ -36,14 +35,14 @@
                 v-for="(course, index) in courses"
                 :key="course.name"
               >
-                <td>{{ course?.name }} </td>
+                <!--<td>{{ course?.name }} </td>-->
                 <td>{{ events.find(e => e.course?.name == course.name).name }}</td>
                 <td>{{ events.filter(e => e.course?.name == course.name).length }} evts.</td>
                 <td
                   v-if="course.maxgroup != 'G1'"
                   class="row"
                 >
-                  <div class="input-field col s8">
+                  <div class="input-field col s12">
                     <i class="material-icons prefix">group</i>
                     <i class="prefix-G">G</i>
                     <input
@@ -51,11 +50,10 @@
                       min="1"
                       class="groupinput"
                       placeholder="1"
+                      :v-model="filterGroups[course.name]"
                       @input="groupFilterInput(course, $event)"
                     >
-                  </div>
-                  <div class="col s4">
-                    <small>groupe max trouvé : {{ course.maxgroup }}</small>
+                    <small>max trouvé: {{ course.maxgroup }}</small>
                   </div>
                 </td> <td v-else />
                 <td class="right-align">
@@ -78,10 +76,22 @@
     <div class="col s12 l8">
       <div class="row">
         <div class="col s12">
-          <div class="input-field col s12" @click="alert('copie')">
-            <i class="material-icons prefix">content_copy</i>
+          <div class="input-field col s12">
+            <i class="material-icons prefix" style="cursor: pointer"
+              @click="clip('http://localhost:8080/ics?'+urlParameters)">content_copy</i>
             <input type="text" :value="`http://localhost:8080/ics?${urlParameters}`" disabled>
           </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col s12 center-align">
+            <ul class="pagination">
+              <li 
+                v-for="w in weeks"
+                :key="w"
+                :class="{'active': currentWeek == w}"
+              ><a @click="() => {this.currentWeek = w}">{{w}}</a></li>
+            </ul>
         </div>
       </div>
       <div class="row center-align">
@@ -112,12 +122,12 @@
         >
           <div
             v-for="event in filter_events(day)"
-            :key="event.name"
-            :class="['card', 'grey', {'hide': isHidden(event.course)}]"
+            :key="event.id"
+            :class="['card', getColor(event.origin), {'hide': isHidden(event?.course)}]"
           >
-            <small>{{ event.name }}</small><br>
-            <small>{{ date(event.start) }} - {{ date(event.end) }}</small><br>
-            <small>{{ event.location }}</small><br>
+            <small>{{ event.name }}</small>
+            <small>{{ date(event.start) }} - {{ date(event.end) }}</small>
+            <small>{{ event.location }}</small>
             <small>{{ event.course?.name }} {{ event.course?.group }}</small>
           </div>
         </div>
@@ -130,6 +140,8 @@
 <script>
 import axios from 'axios'
 import dayjs from 'dayjs'
+import weekOfYear from 'dayjs/plugin/weekOfYear'
+dayjs.extend(weekOfYear)
 
 export default {
   data () {
@@ -138,6 +150,14 @@ export default {
       courses: [],
       resources: [],
       filters: [],
+      filterGroups: [],
+      weeks: [],
+      currentWeek: 1,
+      colors: [
+        'green',
+        'red',
+        'blue'
+      ],
     }
   },
   computed: {
@@ -154,29 +174,49 @@ export default {
   watch: {
     urlParameters(newParams, oldParams) {
       history.pushState(null, null, "?"+newParams);
-    }
+    },
   },
   mounted () {
-    this.resources = this.$route.query.resource
     if (typeof this.$route.query.filter === 'string') {
       this.filters = [this.$route.query.filter]
     } else {
       this.filters = this.$route.query.filter ?? []
     }
-
+    if (typeof this.$route.query.resource === 'string') {
+      this.resources = [this.$route.query.resource]
+    } else {
+      this.resources = this.$route.query.resource ?? []
+    }
+    this.fetchEvents()
+  },
+  methods: {
+    fetchEvents() {
     axios.get('http://localhost:8080/json?' + this.resourcesUrlString)
       .then(res => {
         this.events = res.data.data.events.sort((a, b) => { return new Date(a.start) - new Date(b.start) })
-        // this.courses = this.events.map(e => e.course?.name).filter((element, index, array) => array.indexOf(element) === index)
         this.courses = res.data.data.courses.sort((a, b) => { return a.name <= b.name })
+        this.fillWeeks()
       })
-  },
-  methods: {
+    },
+    fillWeeks() {
+      if (this.events.length == 0) return
+      let min = dayjs(this.events[0].start).week()
+      let max = dayjs(this.events[this.events.length - 1].start).week()
+      this.weeks = []
+      this.currentWeek = min
+      for (let i = min; i <= max; i++) {
+        this.weeks.push(i)   
+      }
+    },
     date (date) {
       return dayjs(date).format('HH:mm')// D/MM
     },
     filter_events (d) {
-      return this.events.filter(e => (new Date(e.start).getDay()) === d)
+      return this.events
+        .filter(e => {
+          return (new Date(e.start).getDay() === d
+            && dayjs(e.start).week() == this.currentWeek)
+        })
     },
     isHidden (course) {
       if (!course) return false
@@ -216,10 +256,21 @@ export default {
             this.resources.push(r)
         })
         e.target.elements.url.value = ''
+        this.fetchEvents()
       } catch (err) {
         alert('url invalide')// err)
       }
+    },
+    getColor(origin) {
+      let index = this.resources.findIndex(v => v === origin)
+      if (index == -1)
+        return 'grey'
+      return this.colors[index % this.colors.length]
+    },
+    clip(text) {
+      window.navigator.clipboard.writeText(text)
     }
+
   }
 }
 </script>
@@ -257,5 +308,17 @@ export default {
 
 .groupinput {
   margin-bottom: 0 !important;
+}
+
+ul.pagination {
+  cursor: pointer;
+  user-select: none;
+}
+
+.card small {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: block;
 }
 </style>
