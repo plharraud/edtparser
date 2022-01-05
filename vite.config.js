@@ -6,7 +6,6 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [ vue() ],
   root: 'app/',
-  base: process.env.APP_BASE,
   build: {
     outDir: '../dist/'
   }

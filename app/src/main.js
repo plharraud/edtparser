@@ -7,3 +7,5 @@ import 'materialize-css/dist/css/materialize.css'
 const app = createApp(App)
   .use(router)
   .mount('#app')
+
+export default app

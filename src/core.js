@@ -24,6 +24,11 @@ const fetchEvents = async (ecole, resources) => {
 const fetchEventsCached = async (ecole, resources) => {
   const key = ecole + resources
 
+  if (process.env.CACHE_ENABLE === 'false') {
+    console.log(key + ' fetch')
+    return fetchEvents(ecole, resources)
+  }
+
   if (cache.has(key)) {
     console.log(key + ' retrieved')
     return cache.get(key)
@@ -129,32 +134,31 @@ const dateToIcsArray = (datestring) => {
 
 const parseEvents = async (req, res, next) => {
   const resources = parseResources(req.query.resource)
-  let edt = {}
+  let edt = []
   for (const resource of Object.values(resources)) {
     if (!resource?.ids || !resource?.ecole) {
       continue
     }
     for (const id of resource.ids) {
       const data = await fetchEventsCached(resource.ecole, id)
-      edt = Object.assign(edt, data.map(e => Object.assign(e, { origin: `${resource.ecole}${resource.ids}` })))
+      edt = edt.concat(data.map(e => Object.assign(e, { origin: `${resource.ecole}${resource.ids}` })))
     }
   }
 
-  const events = Object.values(edt)
-    .map(event => {
-      event.course = parseCourseId(findCourseId(event.description))
+  const events = edt.map(event => {
+    event.course = parseCourseId(findCourseId(event.description))
 
-      return {
-        name: event.summary,
-        description: event.description.trim(),
-        location: event.location,
-        start: event.start,
-        end: event.end,
-        course: event.course,
-        origin: event.origin,
-        id: event.uid
-      }
-    })
+    return {
+      name: event.summary,
+      description: event.description.trim(),
+      location: event.location,
+      start: event.start,
+      end: event.end,
+      course: event.course,
+      origin: event.origin,
+      id: event.uid
+    }
+  })
 
   const filters = parseFilters(req.query.filter)
   const filtered_events = applyFilters(events, filters)

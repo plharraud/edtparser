@@ -5,7 +5,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/edt/',
+      path: '/',
       name: 'edt',
       component: Edt
     }

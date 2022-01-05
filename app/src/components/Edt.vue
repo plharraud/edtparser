@@ -6,13 +6,20 @@
           <div class="row">
             <form @submit.prevent="parseURL">
               <div class="input-field col s8">
-                  <div class="input-field">
-                    <i class="material-icons prefix">insert_link</i>
-                    <input name="url" type="text" placeholder="https://edt.grenoble-inp.fr/directCal/2021-2022/etudiant/phelma?resources=9671,9796">
-                  </div>
+                <div class="input-field">
+                  <i class="material-icons prefix">insert_link</i>
+                  <input
+                    name="url"
+                    type="text"
+                    placeholder="https://edt.grenoble-inp.fr/directCal/2021-2022/etudiant/phelma?resources=9671,9796"
+                  >
+                </div>
               </div>
               <div class="input-field col s4">
-                <button class="btn" type="submit">
+                <button
+                  class="btn"
+                  type="submit"
+                >
                   <i class="material-icons">add</i>
                 </button>
               </div>
@@ -23,7 +30,15 @@
       <div class="row">
         <div class="col s12">
           <ul>
-            <li v-for="r in resources" :key="r">{{r}} <a href="" @click="resources.splice(resources.indexOf(r), 1)">supprimer</a></li>
+            <li
+              v-for="r in resources"
+              :key="r"
+            >
+              {{ r }} <a
+                href=""
+                @click="resources.splice(resources.indexOf(r), 1)"
+              >supprimer</a>
+            </li>
           </ul>
         </div>
       </div>
@@ -32,7 +47,7 @@
           <table>
             <tbody>
               <tr
-                v-for="(course, index) in courses"
+                v-for="course in courses"
                 :key="course.name"
               >
                 <!--<td>{{ course?.name }} </td>-->
@@ -77,39 +92,40 @@
       <div class="row">
         <div class="col s12">
           <div class="input-field col s12">
-            <i class="material-icons prefix" style="cursor: pointer"
-              @click="clip('http://localhost:8080/ics?'+urlParameters)">content_copy</i>
-            <input type="text" :value="`http://localhost:8080/ics?${urlParameters}`" disabled>
+            <i
+              class="material-icons prefix"
+              style="cursor: pointer"
+              @click="clip(base+'ics?'+urlParameters)"
+            >content_copy</i>
+            <input
+              type="text"
+              :value="`${base}ics?${urlParameters}`"
+              disabled
+            >
           </div>
         </div>
       </div>
       <div class="row">
         <div class="col s12 center-align">
-            <ul class="pagination">
-              <li 
-                v-for="w in weeks"
-                :key="w"
-                :class="{'active': currentWeek == w}"
-              ><a @click="() => {this.currentWeek = w}">{{w}}</a></li>
-            </ul>
+          <ul class="pagination">
+            <li
+              v-for="w in weeks"
+              :key="w"
+              :class="{'active': currentWeek == w}"
+            >
+              <a @click="() => {currentWeek = w}">{{ w-1 }}</a>
+            </li>
+          </ul>
         </div>
       </div>
       <div class="row center-align">
         <div class="col s1" />
-        <div class="col s2">
-          lundi
-        </div>
-        <div class="col s2">
-          mardi
-        </div>
-        <div class="col s2">
-          mercredi
-        </div>
-        <div class="col s2">
-          jeudi
-        </div>
-        <div class="col s2">
-          vendredi
+        <div
+          v-for="day in [1,2,3,4,5]"
+          :key="day"
+          class="col s2"
+        >
+          {{ dayAndDate(currentWeek, day) }}
         </div>
         <div class="col s1" />
       </div>
@@ -143,6 +159,8 @@ import dayjs from 'dayjs'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 dayjs.extend(weekOfYear)
 
+console.log()
+
 export default {
   data () {
     return {
@@ -158,25 +176,27 @@ export default {
         'red',
         'blue'
       ],
+      base: ''
     }
   },
   computed: {
     resourcesUrlString () {
-      return this.resources.map(r => 'resource='+ r).join('&')
+      return this.resources.map(r => 'resource=' + r).join('&')
     },
     urlParameters () {
       return [].concat(
-        this.resources.map(r => 'resource='+ r),
+        this.resources.map(r => 'resource=' + r),
         this.filters.map(f => 'filter=' + f)
       ).join('&')
     }
   },
   watch: {
-    urlParameters(newParams, oldParams) {
-      history.pushState(null, null, "?"+newParams);
-    },
+    urlParameters (newParams, oldParams) {
+      history.pushState(null, null, '?' + newParams)
+    }
   },
   mounted () {
+    this.base = import.meta.env.VITE_BASE_URL
     if (typeof this.$route.query.filter === 'string') {
       this.filters = [this.$route.query.filter]
     } else {
@@ -190,22 +210,22 @@ export default {
     this.fetchEvents()
   },
   methods: {
-    fetchEvents() {
-    axios.get('http://localhost:8080/json?' + this.resourcesUrlString)
-      .then(res => {
-        this.events = res.data.data.events.sort((a, b) => { return new Date(a.start) - new Date(b.start) })
-        this.courses = res.data.data.courses.sort((a, b) => { return a.name <= b.name })
-        this.fillWeeks()
-      })
+    fetchEvents () {
+      axios.get(import.meta.env.VITE_BASE_URL + 'json?' + this.resourcesUrlString)
+        .then(res => {
+          this.events = res.data.data.events.sort((a, b) => { return new Date(a.start) - new Date(b.start) })
+          this.courses = res.data.data.courses.sort((a, b) => { return a.name <= b.name })
+          this.fillWeeks()
+        })
     },
-    fillWeeks() {
-      if (this.events.length == 0) return
-      let min = dayjs(this.events[0].start).week()
-      let max = dayjs(this.events[this.events.length - 1].start).week()
+    fillWeeks () {
+      if (this.events.length === 0) return
+      const min = dayjs(this.events[0].start).week()
+      const max = dayjs(this.events[this.events.length - 1].start).week()
       this.weeks = []
       this.currentWeek = min
       for (let i = min; i <= max; i++) {
-        this.weeks.push(i)   
+        this.weeks.push(i)
       }
     },
     date (date) {
@@ -214,8 +234,8 @@ export default {
     filter_events (d) {
       return this.events
         .filter(e => {
-          return (new Date(e.start).getDay() === d
-            && dayjs(e.start).week() == this.currentWeek)
+          return (new Date(e.start).getDay() === d &&
+            dayjs(e.start).week() === this.currentWeek)
         })
     },
     isHidden (course) {
@@ -243,17 +263,16 @@ export default {
         this.filters.push(`g,${course.name},G${groupNumber}`)
       }
     },
-    parseURL(e) {
+    parseURL (e) {
       try {
-        let urlString = e.target.elements.url.value
-        let url = new URL(urlString)
-        let params = new URLSearchParams(url.search)
-        let ecole = url.pathname.split('/').pop()
+        const urlString = e.target.elements.url.value
+        const url = new URL(urlString)
+        const params = new URLSearchParams(url.search)
+        const ecole = url.pathname.split('/').pop()
         let resources = params.get('resources').split(',')
         resources = resources.map(r => ecole + r)
         resources.forEach(r => {
-          if (! this.resources.includes(r))
-            this.resources.push(r)
+          if (!this.resources.includes(r)) { this.resources.push(r) }
         })
         e.target.elements.url.value = ''
         this.fetchEvents()
@@ -261,14 +280,17 @@ export default {
         alert('url invalide')// err)
       }
     },
-    getColor(origin) {
-      let index = this.resources.findIndex(v => v === origin)
-      if (index == -1)
-        return 'grey'
+    getColor (origin) {
+      const index = this.resources.findIndex(v => v === origin)
+      if (index === -1) { return 'grey' }
       return this.colors[index % this.colors.length]
     },
-    clip(text) {
+    clip (text) {
       window.navigator.clipboard.writeText(text)
+    },
+    dayAndDate (weekNumber, dayNumber) {
+      const days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi']
+      return days[dayNumber - 1] + ' ' + dayjs().week(weekNumber).day(dayNumber).date()
     }
 
   }
