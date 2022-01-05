@@ -343,4 +343,9 @@ ul.pagination {
   overflow: hidden;
   display: block;
 }
+
+.card:hover small {
+  text-overflow:unset;
+  white-space:normal;
+}
 </style>
