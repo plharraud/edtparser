@@ -15,6 +15,7 @@ const authHeader = () => {
 }
 
 const fetchEvents = async (ecole, resources) => {
+  // TODO check si l'url existe avant
   return Object.values(await ical.async.fromURL(
     adeUrl(ecole, resources),
     { headers: { ...authHeader() } }
@@ -218,7 +219,7 @@ const debug = (req, res) => {
 const ics = (req, res) => {
   const formatted_events = req.events.map(evt => {
     return {
-      title: evt.summary,
+      title: evt.name,
       description: evt.description,
       location: evt.location,
       start: dateToIcsArray(evt.start),
