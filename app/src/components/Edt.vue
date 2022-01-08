@@ -56,7 +56,7 @@
           <div class="collapsible-header">
             <i class="material-icons">tune</i> Filtres
           </div>
-          <div class="collapsible-body">
+          <div class="collapsible-body no-padding">
             <span>
               <table>
                 <tbody>
@@ -461,5 +461,12 @@ ul.dashed {
 ul.dashed > li:before {
   content: "-";
   margin: 0 3px 0 8px;
+}
+
+.no-padding {
+  padding: 0 !important;
+}
+.collapsible-body {
+  padding: 1rem !important;
 }
 </style>
