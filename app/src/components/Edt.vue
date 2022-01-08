@@ -1,30 +1,64 @@
 <template>
   <div class="row">
-    <div class="col s12 l4">
+    <div class="col s12 l8 push-l4">
+      <div class="row">
+        <div class="col s12 center-align">
+          <ul class="pagination">
+            <li
+              v-for="w in weeks"
+              :key="w"
+              :class="{'active': currentWeek == w}"
+            >
+              <a @click="() => {currentWeek = w}">{{ w-1 }}</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="row center-align">
+        <div class="col s1" />
+        <div
+          v-for="day in [1,2,3,4,5]"
+          :key="day"
+          class="col s2"
+        >
+          {{ dayAndDate(currentWeek, day) }}
+        </div>
+        <div class="col s1" />
+      </div>
+      <div class="row">
+        <div class="col s1" />
+        <div
+          v-for="day in [1,2,3,4,5]"
+          :key="day"
+          class="col s2"
+        >
+          <div
+            v-for="event in filter_events(day)"
+            :key="event.id"
+            :class="['card', getColor(event.origin), {'hide': isHidden(event?.course)}]"
+          >
+            <small>{{ event.name }}</small>
+            <small>{{ date(event.start) }} - {{ date(event.end) }}</small>
+            <small>{{ event.location }}</small>
+            <small>{{ event.course?.name }} {{ event.course?.type }} {{ event.course?.group }}</small>
+          </div>
+        </div>
+        <div class="col s1" />
+      </div>
+    </div>
+    <div class="col s12 l4 pull-l8">
       <div class="row">
         <div class="col s12">
-          <div class="row">
-            <form @submit.prevent="parseURL">
-              <div class="input-field col s8">
-                <div class="input-field">
-                  <i class="material-icons prefix">insert_link</i>
-                  <input
-                    name="url"
-                    type="text"
-                    placeholder="https://edt.grenoble-inp.fr/directCal/2021-2022/etudiant/phelma?resources=9671,9796"
-                  >
-                </div>
-              </div>
-              <div class="input-field col s4">
-                <button
-                  class="btn"
-                  type="submit"
-                >
-                  <i class="material-icons">add</i>
-                </button>
-              </div>
-            </form>
-          </div>
+          <form @submit.prevent="parseURL">
+            <div class="input-field">
+              <i class="material-icons prefix">insert_link</i>
+              <input
+                name="url"
+                type="text"
+                placeholder="https://edt.grenoble-inp.fr/directCal/2021-2022/etudiant/phelma?resources=9671,9796"
+              >
+            </div>
+          </form>
         </div>
       </div>
       <div class="row">
@@ -40,6 +74,22 @@
               >supprimer</a>
             </li>
           </ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col s12">
+          <div class="input-field">
+            <i
+              class="material-icons prefix"
+              style="cursor: pointer"
+              @click="clip(icsUrl)"
+            >content_copy</i>
+            <input
+              type="text"
+              @click="$event.target.select()"
+              :value="icsUrl"
+            >
+          </div>
         </div>
       </div>
       <div class="row">
@@ -88,68 +138,6 @@
         </div>
       </div>
     </div>
-    <div class="col s12 l8">
-      <div class="row">
-        <div class="col s12">
-          <div class="input-field col s12">
-            <i
-              class="material-icons prefix"
-              style="cursor: pointer"
-              @click="clip(base+'ics?'+urlParameters)"
-            >content_copy</i>
-            <input
-              type="text"
-              :value="`${base}ics?${urlParameters}`"
-              disabled
-            >
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col s12 center-align">
-          <ul class="pagination">
-            <li
-              v-for="w in weeks"
-              :key="w"
-              :class="{'active': currentWeek == w}"
-            >
-              <a @click="() => {currentWeek = w}">{{ w-1 }}</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="row center-align">
-        <div class="col s1" />
-        <div
-          v-for="day in [1,2,3,4,5]"
-          :key="day"
-          class="col s2"
-        >
-          {{ dayAndDate(currentWeek, day) }}
-        </div>
-        <div class="col s1" />
-      </div>
-      <div class="row">
-        <div class="col s1" />
-        <div
-          v-for="day in [1,2,3,4,5]"
-          :key="day"
-          class="col s2"
-        >
-          <div
-            v-for="event in filter_events(day)"
-            :key="event.id"
-            :class="['card', getColor(event.origin), {'hide': isHidden(event?.course)}]"
-          >
-            <small>{{ event.name }}</small>
-            <small>{{ date(event.start) }} - {{ date(event.end) }}</small>
-            <small>{{ event.location }}</small>
-            <small>{{ event.course?.name }} {{ event.course?.group }}</small>
-          </div>
-        </div>
-        <div class="col s1" />
-      </div>
-    </div>
   </div>
 </template>
 
@@ -188,6 +176,9 @@ export default {
         this.resources.map(r => 'resource=' + r),
         this.filters.map(f => 'filter=' + f)
       ).join('&')
+    },
+    icsUrl () {
+      return `${this.base}ics?${this.urlParameters}`
     }
   },
   watch: {
