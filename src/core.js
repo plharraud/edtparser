@@ -172,12 +172,6 @@ const parseEvents = async (req, res, next) => {
 
   req.events = filtered_events
 
-  req.debug = {
-    query: { resources, filters },
-    length: filtered_events.length,
-    data: filtered_events
-  }
-
   next()
 }
 
@@ -218,10 +212,6 @@ const json = (req, res) => {
   })
 }
 
-const debug = (req, res) => {
-  res.json(req.debug)
-}
-
 const ics = (req, res) => {
   const formatted_events = req.events.map(evt => {
     return {
@@ -245,6 +235,5 @@ module.exports = {
   parseEvents,
   parseCourses,
   ics,
-  debug,
   json
 }
