@@ -30,16 +30,13 @@ const fetchEventsCached = async (ecole, resources) => {
   const key = ecole + resources
 
   if (process.env.CACHE_ENABLE === 'false') {
-    console.log(key + ' fetch')
     return fetchEvents(ecole, resources)
   }
 
   if (cache.has(key)) {
-    console.log(key + ' retrieved')
     return cache.get(key)
   } else {
     const data = fetchEvents(ecole, resources)
-    console.log(key + ' set')
     cache.set(key, data)
     return data
   }
