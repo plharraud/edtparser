@@ -1,6 +1,7 @@
 const { cache } = require('./cache')
 const ical = require('node-ical')
 const icsBuilder = require('ics')
+const axios = require('axios')
 
 const adeUrl = (ecole, resources) => {
   return `${process.env.ADE_BASE_URL}${ecole}?resources=${resources}`
@@ -15,11 +16,14 @@ const authHeader = () => {
 }
 
 const fetchEvents = async (ecole, resources) => {
-  // TODO check si l'url existe avant
-  return Object.values(await ical.async.fromURL(
-    adeUrl(ecole, resources),
-    { headers: { ...authHeader() } }
-  ))
+  const ics = axios.get(adeUrl(ecole, resources), { headers: authHeader() })
+    .then(async res => {
+      return Object.values(await ical.async.parseICS(res.data))
+    })
+    .catch(err => {
+      console.log(err.message)
+    })
+  return ics
 }
 
 const fetchEventsCached = async (ecole, resources) => {
@@ -142,7 +146,9 @@ const parseEvents = async (req, res, next) => {
     }
     for (const id of resource.ids) {
       const data = await fetchEventsCached(resource.ecole, id)
-      edt = edt.concat(data.map(e => Object.assign(e, { origin: `${resource.ecole}${resource.ids}` })))
+      if (data !== undefined) {
+        edt = edt.concat(data.map(e => Object.assign(e, { origin: `${resource.ecole}${resource.ids}` })))
+      }
     }
   }
 
