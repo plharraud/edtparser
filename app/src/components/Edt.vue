@@ -48,153 +48,163 @@
     </div>
 
     <div class="col s12 l4 pull-l8">
-      <div class="row">
-        <ul class="collapsible expandable">
-          <li>
-            <div class="collapsible-header">
-              <i class="material-icons">tune</i> Filtres
-            </div>
-            <div class="collapsible-body">
-              <span>
-                <table>
-                  <tbody>
-                    <tr
-                      v-for="course in courses"
-                      :key="course.name"
-                    >
-                      <td>
-                        {{ course.name }}
-                        <span
-                          class="new badge grey"
-                          data-badge-caption="evts."
-                        >
-                          {{ events.filter(e => e.course?.name == course.name).length }}
-                        </span>
-                        <br>
-                        <small>{{ events.find(e => e.course?.name == course.name).name }}</small>
-                      </td>
-                      <td
-                        v-if="course.maxgroup != 'G1'"
-                        class="row"
-                      >
-                        <div class="input-field col s12">
-                          <i class="material-icons prefix">group</i>
-                          <i class="prefix-G">G</i>
-                          <input
-                            type="number"
-                            min="1"
-                            class="groupinput"
-                            placeholder="1"
-                            :v-model="filterGroups[course.name]"
-                            @input="groupFilterInput(course, $event)"
-                          >
-                          <small>max trouvé: {{ course.maxgroup }}</small>
-                        </div>
-                      </td> <td v-else />
-                      <td class="right-align">
-                        <label class="check">
-                          <input
-                            v-model="filters"
-                            type="checkbox"
-                            :value="'h,'+course?.name"
-                          >
-                          <i class="small material-icons unchecked">visibility</i>
-                          <i class="small material-icons checked">visibility_off</i>
-                        </label>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table></span>
-            </div>
-          </li>
-          <li>
-            <div class="collapsible-header">
-              <i class="material-icons">event</i> Calendriers
-            </div>
-            <div class="collapsible-body">
-              <span>
-                <form @submit.prevent="parseURL">
-                  <div class="input-field">
-                    <i class="material-icons prefix">insert_link</i>
-                    <input
-                      name="url"
-                      type="text"
-                      placeholder="https://edt.grenoble-inp.fr/directCal/2021-2022/etudiant/phelma?resources=9671,9796"
-                    >
-                  </div>
-                </form>
-                <ul>
-                  <li
-                    v-for="r in resources"
-                    :key="r"
+      <h5 class="hide-on-med-and-down center-align">
+        ADE Filter
+      </h5>
+      <ul class="collapsible expandable">
+        <li>
+          <div class="collapsible-header">
+            <i class="material-icons">tune</i> Filtres
+          </div>
+          <div class="collapsible-body">
+            <span>
+              <table>
+                <tbody>
+                  <tr
+                    v-for="course in courses"
+                    :key="course.name"
                   >
-                    {{ r }} <a
-                      href=""
-                      @click="resources.splice(resources.indexOf(r), 1)"
-                    >supprimer</a>
-                  </li>
-                </ul>
-              </span>
-            </div>
-          </li>
-          <li>
-            <div class="collapsible-header">
-              <i class="material-icons">link</i> Exporter
-            </div>
-            <div class="collapsible-body">
-              <span>
+                    <td>
+                      {{ course.name }}
+                      <span
+                        class="new badge grey"
+                        data-badge-caption="evts."
+                      >
+                        {{ events.filter(e => e.course?.name == course.name).length }}
+                      </span>
+                      <br>
+                      <small>{{ events.find(e => e.course?.name == course.name).name }}</small>
+                    </td>
+                    <td
+                      v-if="course.maxgroup != 'G1'"
+                      class="row"
+                    >
+                      <div class="input-field col s12">
+                        <i class="material-icons prefix">group</i>
+                        <i class="prefix-G">G</i>
+                        <input
+                          type="number"
+                          min="1"
+                          class="groupinput"
+                          placeholder="1"
+                          :v-model="filterGroups[course.name]"
+                          @input="groupFilterInput(course, $event)"
+                        >
+                        <small>max trouvé: {{ course.maxgroup }}</small>
+                      </div>
+                    </td> <td v-else />
+                    <td class="right-align">
+                      <label class="check">
+                        <input
+                          v-model="filters"
+                          type="checkbox"
+                          :value="'h,'+course?.name"
+                        >
+                        <i class="small material-icons unchecked">visibility</i>
+                        <i class="small material-icons checked">visibility_off</i>
+                      </label>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!--TODO afficher les filtres actifs mais dont le cours est pas detecté-->
+            </span>
+          </div>
+        </li>
+        <li>
+          <div class="collapsible-header">
+            <i class="material-icons">event</i> Calendriers
+          </div>
+          <div class="collapsible-body">
+            <span>
+              <form @submit.prevent="parseURL">
                 <div class="input-field">
-                  <i
-                    class="material-icons prefix"
-                    style="cursor: pointer"
-                    @click="clip(icsUrl)"
-                  >content_copy</i>
+                  <i class="material-icons prefix">insert_link</i>
                   <input
+                    name="url"
                     type="text"
-                    :value="icsUrl"
-                    @click="$event.target.select()"
+                    placeholder="https://edt.grenoble-inp.fr/directCal/2021-2022/etudiant/phelma?resources="
                   >
                 </div>
-              </span>
-            </div>
-          </li>
-          <li>
-            <div class="collapsible-header">
-              <i class="material-icons">help_outline</i> Utilisation
-            </div>
-            <div class="collapsible-body">
-              <span>
-                <ol>
-                  <li>
-                    sur <a
-                      href="https://edt.grenoble-inp.fr/"
-                      target="blank"
-                    >ADE</a> choisir l'école (pas EXTERIEUR)
-                  </li>
-                  <li>
-                    choisir le calendrier
-                  </li>
-                  <li>
-                    <i>Agenda export</i> en bas a gauche
-                  </li>
-                  <li>
-                    <i>Generate URL</i>
-                  </li>
-                  <li>
-                    coller l'url dans <i class="material-icons">event</i> Calendriers
-                  </li>
-                </ol>
+              </form>
+              <ul>
+                <li
+                  v-for="r in resources"
+                  :key="r"
+                >
+                  {{ r }} <a
+                    href=""
+                    @click="resources.splice(resources.indexOf(r), 1)"
+                  >supprimer</a>
+                </li>
+              </ul>
+            </span>
+          </div>
+        </li>
+        <li>
+          <div class="collapsible-header">
+            <i class="material-icons">link</i> Exporter
+          </div>
+          <div class="collapsible-body">
+            <span>
+              URL ICal
+              <div class="input-field">
+                <i
+                  class="material-icons prefix"
+                  style="cursor: pointer"
+                  @click="clip(icsUrl)"
+                >content_copy</i>
+                <input
+                  type="text"
+                  :value="icsUrl"
+                  @click="$event.target.select()"
+                >
+              </div>
+            </span>
+          </div>
+        </li>
+        <li>
+          <div class="collapsible-header">
+            <i class="material-icons">help_outline</i> Utilisation
+          </div>
+          <div class="collapsible-body">
+            <span>
+              <p>
+                ADE Filter permet de fusionner plusieurs calendriers ADE et de filtrer les cours<br>
+              </p>
+              Importer un calendrier
+              <ol>
+                <li>
+                  sur <a
+                    href="https://edt.grenoble-inp.fr/"
+                    target="blank"
+                  >ADE</a> choisir l'école (pas EXTERIEUR)
+                </li>
+                <li>
+                  choisir le calendrier
+                </li>
+                <li>
+                  <i>Agenda export</i> en bas a gauche
+                </li>
+                <li>
+                  <i>Generate URL</i>
+                </li>
+                <li>
+                  coller l'url dans <i class="material-icons">event</i> Calendriers (Entrée pour valider)
+                </li>
+              </ol>
+              <p>
                 <a
                   href="https://prism.minatec.grenoble-inp.fr/images/doc/Synchroniser%20son%20calendrier%20avec%20ADE.pdf"
                   target="blank"
                 >
                   Instructions de synchronisation sur Android
                 </a>
-              </span>
-            </div>
-          </li>
-        </ul>
-      </div>
+              </p>
+            </span>
+          </div>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -260,7 +270,7 @@ export default {
   },
   methods: {
     fetchEvents () {
-      axios.get(import.meta.env.VITE_BASE_URL + 'json?' + this.resourcesUrlString)
+      axios.get(this.base + 'json?' + this.resourcesUrlString)
         .then(res => {
           this.events = res.data.data.events.sort((a, b) => { return new Date(a.start) - new Date(b.start) })
           this.courses = res.data.data.courses.sort((a, b) => { return a.name >= b.name ? 1 : -1 })
@@ -314,7 +324,7 @@ export default {
     },
     parseURL (e) {
       try {
-        const urlString = e.target.elements.url.value
+        const urlString = e.target.elements.url.value.trim()
         const url = new URL(urlString)
         const params = new URLSearchParams(url.search)
         const ecole = url.pathname.split('/').pop()
@@ -326,7 +336,7 @@ export default {
         e.target.elements.url.value = ''
         this.fetchEvents()
       } catch (err) {
-        alert('url invalide')// err)
+        alert('url invalide')
       }
     },
     getColor (origin) {
