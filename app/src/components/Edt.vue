@@ -86,8 +86,8 @@
             >content_copy</i>
             <input
               type="text"
-              @click="$event.target.select()"
               :value="icsUrl"
+              @click="$event.target.select()"
             >
           </div>
         </div>
