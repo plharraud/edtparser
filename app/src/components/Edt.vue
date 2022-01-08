@@ -63,6 +63,7 @@
                   <tr
                     v-for="course in courses"
                     :key="course.name"
+                    :class="{'course-hidden': filters.find(v => v === 'h,'+course.name)}"
                   >
                     <td>
                       {{ course.name }}
@@ -134,7 +135,7 @@
                 >
                   {{ r }} <a
                     href=""
-                    @click="resources.splice(resources.indexOf(r), 1)"
+                    @click.prevent="removeResource(r)"
                   >supprimer</a>
                 </li>
               </ul>
@@ -190,7 +191,12 @@
                   <i>Generate URL</i>
                 </li>
                 <li>
-                  coller l'url dans <i class="material-icons">event</i> Calendriers (Entrée pour valider)
+                  coller l'url dans <i class="material-icons">event</i> Calendriers (Entrée pour valider) <br>
+                  on peut aussi utiliser le format ecoleCODE,... (ex: phelma9796,9760)
+                  <ul class="dashed">
+                    <li>ecole : le nom de l'ecole</li>
+                    <li>CODE : la liste des identifiants de calendrier (séparés par des ,)</li>
+                  </ul>
                 </li>
               </ol>
               <p>
@@ -217,6 +223,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear'
 dayjs.extend(weekOfYear)
 
 export default {
+  name: 'Edt',
   data () {
     return {
       events: [],
@@ -225,13 +232,14 @@ export default {
       filters: [],
       filterGroups: [],
       weeks: [],
-      currentWeek: 1,
+      currentWeek: -1,
       colors: [
         'green',
         'red',
         'blue'
       ],
-      base: ''
+      base: '',
+      oldResource: []
     }
   },
   computed: {
@@ -249,8 +257,21 @@ export default {
     }
   },
   watch: {
-    urlParameters (newParams, oldParams) {
-      history.pushState(null, null, '?' + newParams)
+    urlParameters (newR, old) {
+      this.$router.push('?' + this.urlParameters)
+    },
+    '$route.query.resource': function (newResource, oldResource) {
+      if (JSON.stringify(newResource) !== JSON.stringify(oldResource)) {
+        this.resources = (typeof newResource === 'string' ? [newResource] : newResource) ?? []
+        this.fetchEvents()
+      }
+    },
+    '$route.query.filter': function (newFilter, oldFilter) {
+      if (typeof this.$route.query.filter === 'string') {
+        this.filters = [this.$route.query.filter]
+      } else {
+        this.filters = this.$route.query.filter ?? []
+      }
     }
   },
   mounted () {
@@ -270,7 +291,7 @@ export default {
   },
   methods: {
     fetchEvents () {
-      axios.get(this.base + 'json?' + this.resourcesUrlString)
+      axios.get(import.meta.env.VITE_BASE_URL + 'json?' + this.resourcesUrlString)
         .then(res => {
           this.events = res.data.data.events.sort((a, b) => { return new Date(a.start) - new Date(b.start) })
           this.courses = res.data.data.courses.sort((a, b) => { return a.name >= b.name ? 1 : -1 })
@@ -282,7 +303,7 @@ export default {
       const min = dayjs(this.events[0].start).week()
       const max = dayjs(this.events[this.events.length - 1].start).week()
       this.weeks = []
-      this.currentWeek = min
+      this.currentWeek = this.currentWeek === -1 ? min : this.currentWeek
       for (let i = min; i <= max; i++) {
         this.weeks.push(i)
       }
@@ -323,21 +344,34 @@ export default {
       }
     },
     parseURL (e) {
+      const inputValue = e.target.elements.url.value.trim()
+      let url
+      let resources = []
       try {
-        const urlString = e.target.elements.url.value.trim()
-        const url = new URL(urlString)
-        const params = new URLSearchParams(url.search)
-        const ecole = url.pathname.split('/').pop()
-        let resources = params.get('resources').split(',')
-        resources = resources.map(r => ecole + r)
-        resources.forEach(r => {
-          if (!this.resources.includes(r)) { this.resources.push(r) }
-        })
-        e.target.elements.url.value = ''
-        this.fetchEvents()
+        url = new URL(inputValue)
       } catch (err) {
-        alert('url invalide')
       }
+
+      const regex = /(?<ecole>[a-z]+)(?<ids>[\d,]+)+/g
+      const regresult = [...inputValue.matchAll(regex)][0]?.groups
+
+      if (url !== undefined) {
+        const params = new URLSearchParams(url.search)
+        resources = params.get('resources').split(',')
+        const ecole = url.pathname.split('/').pop()
+        resources = resources.map(r => ecole + r)
+      } else if (regresult !== undefined) {
+        resources = regresult.ids.split(',').map(r => regresult.ecole + r)
+      } else {
+        alert('url ou code invalide')
+        return
+      }
+
+      resources.forEach(r => {
+        if (!this.resources.includes(r)) { this.resources = this.resources.concat([r]) }
+      })
+
+      e.target.elements.url.value = ''
     },
     getColor (origin) {
       const index = this.resources.findIndex(v => v === origin)
@@ -350,6 +384,9 @@ export default {
     dayAndDate (weekNumber, dayNumber) {
       const days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi']
       return days[dayNumber - 1] + ' ' + dayjs().week(weekNumber).day(dayNumber).date()
+    },
+    removeResource (r) {
+      this.resources = this.resources.filter(res => res !== r)
     }
 
   }
@@ -373,6 +410,11 @@ export default {
 }
 .check input:checked ~ .unchecked {
   display: none;
+}
+
+tr.course-hidden {
+  opacity: 60%;
+  background-color: #eee;
 }
 
 .prefix-G {
@@ -410,5 +452,14 @@ ul.pagination {
 
 .material-icons {
   vertical-align: middle;
+}
+
+ul.dashed {
+  list-style-type: none;
+  margin: 0;
+}
+ul.dashed > li:before {
+  content: "-";
+  margin: 0 3px 0 8px;
 }
 </style>
