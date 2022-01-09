@@ -47,7 +47,7 @@
       </div>
     </div>
 
-    <div class="col s12 l4 pull-l8">
+    <div class="col s12 l4 pull-l8 no-padding">
       <h5 class="hide-on-med-and-down center-align">
         ADE Filter
       </h5>
