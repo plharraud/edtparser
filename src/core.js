@@ -153,7 +153,7 @@ const parseEvents = async (req, res, next) => {
     event.course = parseCourseId(findCourseId(event.description))
 
     return {
-      name: event.summary,
+      name: `${event.course?.type || ''} ${event.summary}`,
       description: event.description.trim(),
       location: event.location,
       start: event.start,
